@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:hireme_v2/bloc/todo/todo_bloc.dart';
+import 'package:hireme_v2/utils/custom_stuffs.dart';
 
 class Homescreen extends StatelessWidget {
   const Homescreen({super.key});
@@ -20,32 +23,100 @@ class Homescreen extends StatelessWidget {
           children: [
             TextField(
               controller: titleController,
-              decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'Tile here...'),
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(), hintText: 'Tile here...'),
             ),
-            SizedBox(height: 10.h,),
+            SizedBox(
+              height: 10.h,
+            ),
             TextField(
               controller: decController,
-              decoration: InputDecoration(border: OutlineInputBorder(),hintText: 'Description here...'),
+              decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Description here...'),
             ),
-            SizedBox(height: 10.h,),
+            SizedBox(
+              height: 10.h,
+            ),
             ElevatedButton(
-                style: ButtonStyle(backgroundColor: WidgetStatePropertyAll(Colors.purple)),
-                onPressed: () {}, child: Text("Create Task",style: TextStyle(color: Colors.white),)),
-            SizedBox(height: 20.h,),
+                style: ButtonStyle(
+                    backgroundColor: WidgetStatePropertyAll(Colors.purple)),
+                onPressed: () {
+                  context.read<TodoBloc>().add(AddTodoEvent(title: titleController.text.trim(), desc: decController.text.trim(), ctx: context));
+
+                  },
+                child: Text(
+                  "Create Task",
+                  style: TextStyle(color: Colors.white),
+                )),
+            SizedBox(
+              height: 20.h,
+            ),
             Expanded(
-              child: ListView.separated(itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text("Need to by a new laptop", maxLines: 1, style: TextStyle(overflow: TextOverflow.ellipsis),),
-                  subtitle: Text("Here will be a 2 line of desciption...",maxLines: 2, style: TextStyle(overflow: TextOverflow.ellipsis, color: Colors.grey),),
-                  trailing: Checkbox(value: true, onChanged: (value) {},),
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.green,
-                    child: Text((index + 1).toString()),
-                  ),
-                );
-              }, separatorBuilder: (context, index) {
-                return Divider();
-              }, itemCount: 10),
+              child: BlocConsumer<TodoBloc, TodoStates>(
+                builder: (context, state) {
+                  if(state is TaskTodoState){
+                    if(state.records.isEmpty){
+                      return Center(
+                        child: Text("No Record Found"),
+                      );
+                    }
+                    return ListView.separated(
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(
+                              state.records[index]['title'],
+                              maxLines: 1,
+                              style: TextStyle(overflow: TextOverflow.ellipsis),
+                            ),
+                            subtitle: Text(
+                              state.records[index]['desc'],
+                              maxLines: 2,
+                              style: TextStyle(
+                                  overflow: TextOverflow.ellipsis,
+                                  color: Colors.grey),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Checkbox(
+                                  value: state.records[index]['isCompleted'],
+                                  onChanged: (value) {},
+                                ),
+                                GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () {
+                                      context.read<TodoBloc>().add(RemoveTodoEvent(id: state.records[index]['id']));
+                                    },
+                                    child: Icon(Icons.delete, color: Colors.red,))
+                              ],
+                            ),
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.green,
+                              child: Text((index + 1).toString()),
+                            ),
+                          );
+                        },
+                        separatorBuilder: (context, index) {
+                          return Divider();
+                        },
+                        itemCount: state.records.length);
+                  }
+                  else{
+                    return Center(
+                      child: Text("Invalid State"),
+                    );
+                  }
+                },
+                listener: (context, state) {
+                  if(state is TaskTodoState){
+                    if(state.records.isEmpty)return;
+                    titleController.clear();
+                    decController.clear();
+                    CustomSnackbar(context, "Event Success!!!");
+                  }
+                },
+              ),
             )
           ],
         ),
