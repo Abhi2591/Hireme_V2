@@ -11,6 +11,23 @@ class TodoBloc extends Bloc<TodoEvents, TodoStates>{
     on<ResetTodoEvent>(_resetTaskHandler);
     on<AddTodoEvent>(_insertNewTaskHandler);
     on<RemoveTodoEvent>(_deleteTaskHandler);
+    on<UpdateTodoEvent>(_updateTaskHandler);
+  }
+
+  void _updateTaskHandler(UpdateTodoEvent event, Emitter<TodoStates> emit){
+    final currentState = state;
+    if(currentState is! TaskTodoState)return;
+
+    final updatedList = List<Map<String,dynamic>>.from(currentState.records).map((e) {
+      if(e['id'] == event.id){
+        return {...e, "isCompleted" : event.newValue};
+      }
+      return e;
+    },).toList();
+
+    emit(currentState.copyWith(records: updatedList));
+
+
   }
 
   void _deleteTaskHandler(RemoveTodoEvent event, Emitter<TodoStates> emit){

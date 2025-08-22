@@ -80,9 +80,15 @@ class Homescreen extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Checkbox(
+                                  checkColor: Colors.white,
+                                  activeColor: Colors.blue,
                                   value: state.records[index]['isCompleted'],
-                                  onChanged: (value) {},
+                                  onChanged: (value) {
+                                    print("Check Box Value : ${value}");
+                                    context.read<TodoBloc>().add(UpdateTodoEvent(id: state.records[index]['id'], newValue: value));
+                                  },
                                 ),
+                                Icon(Icons.edit, color: Colors.blue,),
                                 GestureDetector(
                                     behavior: HitTestBehavior.opaque,
                                     onTap: () {
@@ -92,7 +98,7 @@ class Homescreen extends StatelessWidget {
                               ],
                             ),
                             leading: CircleAvatar(
-                              backgroundColor: Colors.green,
+                              backgroundColor: state.records[index]['isCompleted'] ?Colors.green : Colors.red,
                               child: Text((index + 1).toString()),
                             ),
                           );
